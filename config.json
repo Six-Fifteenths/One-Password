@@ -1,0 +1,35 @@
+{
+  "ascii": [                                                                                           
+    "   _/    _/                         _/                                                  _/   ",
+    "  _/    _/       _/_/_/        _/_/_/        _/_/       _/  _/_/       _/_/        _/_/_/    ",
+    " _/    _/       _/    _/    _/    _/      _/_/_/_/     _/_/         _/_/_/_/    _/    _/     ",
+    "_/    _/       _/    _/    _/    _/      _/           _/           _/          _/    _/      ",
+    " _/_/         _/    _/      _/_/_/        _/_/_/     _/             _/_/_/      _/_/_/       "
+  ],
+  "username": "visitor",
+  "hostname": "Undered",
+  "password": "liberty",
+  "colors": {
+    "background": "#0C0623",
+    "foreground": "#F8DDE5",
+    "banner": "#FFFFFF",
+    "border": {
+      "visible": true,
+      "color": "#999999"
+    },
+    "prompt": {
+      "default": "#A5A7A7",
+      "user": "#FE6BC9",
+      "host": "#70FDFF",
+      "input": "#AABBCC"
+    },
+    "link": {
+      "text": "#B6AAEE",
+      "highlightColor": "#FFADE2",
+      "highlightText": "#0C0623"
+    },
+    "commands": {
+      "textColor": "#009BDB"
+    }
+  }
+}

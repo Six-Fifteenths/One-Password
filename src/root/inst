@@ -1,0 +1,9 @@
+
+
+
+
+
+"'cd [path]'","Change directory."
+"'cat [file]'","Display file contents."
+"'pwd'","Print the current working directory path."
+"'ls'","List files and folders in current directory."

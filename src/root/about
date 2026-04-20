@@ -1,0 +1,43 @@
+<br>
+-Information Below Is Unrelated To The Game-
+<br>
+
+# 游戏信息
+<br>
+本游戏 <span class='command'>One Password</span> 为一个网页解谜游戏，预计游玩时间为1-2小时，推荐在电脑端游玩。
+本游戏不含有任何令人不安的要素，不含有任何音频与图片，不含有任何与现实的联系。
+本游戏的形式为一个在网页运作的终端模拟器，游戏玩法是探索这个终端，同时逐步了解这个游戏内发生的故事。
+本游戏整体模仿Linux系统设计终端，迫于技术限制无法完全实现每个命令的功能。
+本游戏的内容仅在单个网页内而无需跳转，但是你可以借助从外部获取到的任何工具完成游戏。
+本游戏的关卡全部为形如 <span class='command'>'stage'+number</span> 的文件夹，成功探索该文件夹意味着关卡的通过。本游戏最大的关卡号数为 stage10. 
+本游戏难度较大，您可以使用<span class='command'>'hint [stage]'</span>命令获取进入[stage]的方法的提示。
+本游戏共有五个结局。其中 end1 和 end2 是普通结局，end3 至 end5 为彩蛋结局。
+你可以使用<span class='command'>'hint ['end'+number]'</span>来获取达成结局的提示。建议在达成至少一个结局之后使用该命令，且建议按顺序达成这些结局。
+因游戏叙事氛围需求，本游戏文本由英文编写，但你可以访问中文版<-一处链接->。
+因游戏故事与机制的设定需求，本游戏不设置存档机制。
+如游戏名所述，在整个游戏过程中只会出现一个密码。
+<br>
+
+# 作者的话
+<br>
+你好。我是<span class='command'> New B. </span>, 是这个网页解谜游戏的作者。
+这个游戏于2026年4月17日凌晨开始制作，在<-A月B日->完成。
+这是我在为之后的一个ARG项目探索玩法时产出的副产物。
+尽管这不是一个ARG游戏，我仍然尽全力将这个游戏的机制和剧情变得有趣。
+这个游戏的很多剧情设定与玩法设定其实都是由于技术能力不足被迫加入的，我对此感到抱歉。
+感谢你的游玩，希望你能喜欢。
+<br>
+
+# 致谢
+<br>
+感谢各位网页解谜的开发者与他们带来的优秀设计，此处不再一一列举。
+感谢 Gemini AI 提供的大量技术知识参考和剧情辅助。此游戏的大部分剧情文本由我编写并由它微调。
+感谢 Github Copilot 提供的关键代码支持。此游戏的大部分代码由它编写并由我删改。
+感谢 <a href=https://space.bilibili.com/11439687 target="_blank">@玩家musicraft</a> 与他组建的<a href=https://www.mistarg.cn/ target="_blank">迷雾论坛</a>内的其余用户，我从论坛内的交流讨论中收获颇丰。
+感谢 <a href=https://github.com/nasan016/ target="_blank">@nasan016</a> 和其开源的 <a href=https://github.com/nasan016/webshell target="_blank">网站</a> 。本游戏按该网站修改而成。
+<br>
+
+# start
+阅读完以上内容后，键入<span class='command'>'cat intro'</span>以开始游戏。
+<br>
+-Information Above Is Unrelated To The Game-
