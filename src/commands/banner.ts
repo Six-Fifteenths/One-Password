@@ -25,7 +25,7 @@ const createBanner = () : string[] => {
     banner.push(eleToPush);
   });  
   banner.push("<br>");
-  banner.push("<span style='color: #ffff00;'>SuperiArmy Message:</span> Type <span class='command'>'cat about'</span> .");
+  banner.push("<span style='color: #ffff00;'>2577F410EF3968E7 Message:</span> Type <span class='command'>'cat about'</span> .");
   banner.push("<br>");
   return banner;
 }

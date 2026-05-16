@@ -4,17 +4,15 @@
  */
 
 import { CommandContext } from "./registry";
+import { BARE_MODE_ENDINGS } from "./bareMode.ts";
 import { parsePath, resolvePath, getPathContent, isValidDirectory, deleteFileOrFolder, createDirectoryImpl, createFileImpl, getFileContent, setFileContent } from "./filesystem";
+import { runReadRule } from "./specialFiles.ts";
 
 /**
  * 改变目录命令：在虚拟文件系统中导航目录
  * 支持绝对路径、相对路径、home 路径、.. 返回上级、多级路径
  */
 export const changeDirectory = (pathInput: string, ctx: CommandContext) => {
-  if (ctx.getBareMode()) {
-    return;
-  }
-
   if (!pathInput || pathInput.trim().length === 0) {
     ctx.writeLines(["cd: missing operand", "<br>"]);
     return;
@@ -40,10 +38,6 @@ export const changeDirectory = (pathInput: string, ctx: CommandContext) => {
  * 读取文件内容命令
  */
 export const readFile = (filePath: string, ctx: CommandContext) => {
-  if (ctx.getBareMode()) {
-    return;
-  }
-
   if (!filePath || filePath.trim().length === 0) {
     ctx.writeLines(["cat: missing operand", "<br>"]);
     return;
@@ -57,7 +51,8 @@ export const readFile = (filePath: string, ctx: CommandContext) => {
     return;
   }
 
-  const txt = getFileContent(resolution.targetPath, resolution.fileName);
+  const overrideText = runReadRule(resolution.targetPath.concat(resolution.fileName));
+  const txt = overrideText !== null ? overrideText : getFileContent(resolution.targetPath, resolution.fileName);
 
   if (txt !== null) {
     const lines = txt.split(/\r?\n/);
@@ -95,10 +90,6 @@ export const listDirectory = (ctx: CommandContext) => {
  * 创建目录
  */
 export const createDirectory = (dirName: string, ctx: CommandContext) => {
-  if (ctx.getBareMode()) {
-    return;
-  }
-
   if (!dirName) {
     ctx.writeLines(["mkdir: missing operand", "<br>"]);
     return;
@@ -124,10 +115,6 @@ export const createDirectory = (dirName: string, ctx: CommandContext) => {
  * 创建文件
  */
 export const createFile = (filePath: string, ctx: CommandContext) => {
-  if (ctx.getBareMode()) {
-    return;
-  }
-
   if (!filePath) {
     ctx.writeLines(["touch: missing operand", "<br>"]);
     return;
@@ -148,10 +135,6 @@ export const createFile = (filePath: string, ctx: CommandContext) => {
  * 编辑文件
  */
 export const editFile = (filePath: string, ctx: CommandContext) => {
-  if (ctx.getBareMode()) {
-    return;
-  }
-
   if (!filePath) {
     ctx.writeLines(["edit: missing operand", "<br>"]);
     return;
@@ -183,27 +166,9 @@ export const handleRmRf = (pathToDelete: string, ctx: CommandContext) => {
     return;
   }
 
-  // 特殊彩蛋：在根目录执行 rm -rf * 时激活 bareMode
-  if (pathToDelete === "*" && ctx.currentPath.length === 0 && !ctx.getBareMode()) {
-    ctx.setBareMode(true);
-    ctx.clearTerminal();
-    
-    if (ctx.USERINPUT) {
-      ctx.USERINPUT.classList.add('bareMode');
-    }
-    
-    ctx.easterEggStyles();
-    setTimeout(() => {
-      ctx.writeLines(["<br>", "The game has ended.", "<br>"]);
-    }, 200);
-    setTimeout(() => {
-      ctx.disableInput();
-    }, 800);
-    return;
-  }
-
-  // bareMode 下禁止任何删除操作
-  if (ctx.getBareMode()) {
+  // 特殊彩蛋：在根目录执行 rm -rf * 时进入 baremode 结局
+  if (pathToDelete === "*" && ctx.currentPath.length === 0) {
+    ctx.triggerBareMode(BARE_MODE_ENDINGS.root);
     return;
   }
 

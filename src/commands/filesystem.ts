@@ -4,6 +4,7 @@
  */
 
 import { fileSystem, fileContents } from "../dirStructure";
+import { isPathAccessible, isPathListable, runCreateRule, runDeleteRule, runWriteRule } from "./specialFiles";
 
 /**
  * 解析和规范化路径
@@ -39,6 +40,7 @@ export const parsePath = (inputPath: string, currentPath: string[]): string[] | 
  * @returns 该路径下的内容对象，或 null 如果路径不存在
  */
 export const getPathContent = (path: string[]) => {
+  if (!isPathAccessible(path)) return null;
   let current = fileSystem.root.children;
   
   for (const dir of path) {
@@ -49,7 +51,12 @@ export const getPathContent = (path: string[]) => {
     }
   }
   
-  return current;
+  return Object.entries(current).reduce((filtered, [name, item]) => {
+    if (!name.startsWith('__') && isPathListable([...path, name])) {
+      filtered[name] = item;
+    }
+    return filtered;
+  }, {} as Record<string, any>);
 };
 
 /** 路径解析结果 */
@@ -84,7 +91,12 @@ export const resolvePath = (inputPath: string, currentPath: string[]): PathResol
 
   // 验证目录存在
   let content = fileSystem.root.children;
+  const ancestorPath: string[] = [];
   for (const dir of targetPath) {
+    ancestorPath.push(dir);
+    if (!isPathAccessible(ancestorPath)) {
+      return null;
+    }
     if (content[dir]?.children !== undefined) {
       content = content[dir].children;
     } else {
@@ -92,7 +104,11 @@ export const resolvePath = (inputPath: string, currentPath: string[]): PathResol
     }
   }
 
-  // 检查文件/目录是否存在
+  // 检查文件/目录是否存在，并确保目标路径可访问
+  if (!isPathAccessible([...targetPath, fileName])) {
+    return null;
+  }
+
   const exists = !!content[fileName];
   const isDirectory = exists && content[fileName].type === 'folder';
 
@@ -103,6 +119,7 @@ export const resolvePath = (inputPath: string, currentPath: string[]): PathResol
  * 验证路径是否为有效目录
  */
 export const isValidDirectory = (path: string[]): boolean => {
+  if (!isPathAccessible(path)) return false;
   let content = fileSystem.root.children;
   
   for (const dir of path) {
@@ -138,6 +155,7 @@ export const deleteFileOrFolder = (targetPath: string[], fileName: string): void
       delete fileContents[key];
     }
     delete content[fileName];
+    runDeleteRule(targetPath.concat(fileName));
   }
 };
 
@@ -160,6 +178,7 @@ export const createDirectoryImpl = (targetPath: string[], newDirName: string): b
   }
 
   content[newDirName] = { type: 'folder', children: {} };
+  runCreateRule(targetPath.concat(newDirName));
   return true;
 };
 
@@ -185,6 +204,7 @@ export const createFileImpl = (targetPath: string[], newFileName: string): boole
   const relativeParts = targetPath.concat(newFileName);
   const key = relativeParts.join('/');
   fileContents[key] = '';
+  runCreateRule(relativeParts);
   return true;
 };
 
@@ -205,4 +225,5 @@ export const setFileContent = (targetPath: string[], fileName: string, content: 
   const relativeParts = targetPath.concat(fileName);
   const key = relativeParts.join('/');
   fileContents[key] = content;
+  runWriteRule(relativeParts, content);
 };

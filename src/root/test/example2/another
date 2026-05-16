@@ -1,0 +1,11 @@
+文本内容本来是“asdfgh”。
+触发：在maybeafile里建立一个指定的文件组,文件组的内容由我指定。
+指定的文件组是：
+maybeafile/qwerty[file]
+(qwerty: 123456)
+maybeafile/asdcxz[folder]/lambda[file]
+lambda内容不判断，随意。
+maybeafile/asdcxz[folder]/aaaaaaaaa[folder]/disr[file]
+(disr:999999)
+
+效果：这个文本的内容变为“zxcvbn”

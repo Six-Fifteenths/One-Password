@@ -7,9 +7,10 @@ import { handleCommand, CommandContext } from "./commands/registry";
 let mutWriteLines = document.getElementById("write-lines");
 let historyIdx = 0; // 命令历史导航索引
 let userInput : string; // 当前用户输入
-let bareMode = false; // bareMode 状态（easter egg 触发）
 let currentPath : string[] = []; // 虚拟文件系统中的当前路径（相对于 home），如 ['root', 'a']
 let isOutputting = false; // 输出锁：true 时表示程序正在输出内容，禁止用户输入
+let commandQueue : string[] = []; // 多行命令队列
+let isProcessingQueue = false; // 是否正在处理命令队列
 
 // WRITELINESCOPY 在 clear 命令时用于重置终端内容
 const WRITELINESCOPY = mutWriteLines;
@@ -29,6 +30,16 @@ const scrollToBottom = () => {
   if(!MAIN) return
 
   MAIN.scrollTop = MAIN.scrollHeight;
+}
+
+/** 清空终端内容 */
+function clearTerminal() {
+  setTimeout(() => {
+    if (!TERMINAL || !WRITELINESCOPY) return;
+    TERMINAL.innerHTML = "";
+    TERMINAL.appendChild(WRITELINESCOPY);
+    mutWriteLines = WRITELINESCOPY;
+  });
 }
 
 /** 处理用户在输入框中的所有按键事件 */
@@ -67,49 +78,95 @@ function enterKey() {
 
   if (!mutWriteLines || !PROMPT) return
   const resetInput = "";
-  let newUserInput;
   userInput = USERINPUT.value;
 
-  if (bareMode) {
-    newUserInput = userInput;
-  } else {
-    newUserInput = `<span class='output'>${userInput}</span>`;
-  }
-
-  HISTORY.push(userInput);
-  historyIdx = HISTORY.length
-
-  //if clear then early return
-  if (userInput === 'clear') {
-    commandHandler(userInput.toLowerCase().trim());
+  // 检测多行命令
+  const lines = userInput.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  
+  if (lines.length > 1) {
+    // 多行命令：加入队列
+    commandQueue = lines;
+    isProcessingQueue = true;
+    HISTORY.push(userInput);
+    historyIdx = HISTORY.length;
+    
+    // 显示所有命令行
+    lines.forEach(line => {
+    const newUserInput = `<span class='output'>${line}</span>`;
+      const div = document.createElement("div");
+      div.innerHTML = `<span id="prompt">${PROMPT.innerHTML}</span> ${newUserInput}`;
+      if (mutWriteLines && mutWriteLines.parentNode) {
+        mutWriteLines.parentNode.insertBefore(div, mutWriteLines);
+      }
+    });
+    
     USERINPUT.value = resetInput;
     userInput = resetInput;
-    return
-  }
+    scrollToBottom();
+    
+    // 开始执行队列中的命令
+    processCommandQueue();
+  } else {
+    // 单行命令：原来的逻辑
+    const newUserInput = `<span class='output'>${userInput}</span>`;
 
-  const div = document.createElement("div");
-  div.innerHTML = `<span id="prompt">${PROMPT.innerHTML}</span> ${newUserInput}`;
+    HISTORY.push(userInput);
+    historyIdx = HISTORY.length
 
-  if (mutWriteLines.parentNode) {
-    mutWriteLines.parentNode.insertBefore(div, mutWriteLines);
-  }
+    //if clear then early return
+    if (userInput === 'clear') {
+      commandHandler(userInput.toLowerCase().trim());
+      USERINPUT.value = resetInput;
+      userInput = resetInput;
+      return
+    }
 
-  /*
-  if input is empty or a collection of spaces, 
-  just insert a prompt before #write-lines
-  */
-  if (userInput.trim().length !== 0) {
+    const div = document.createElement("div");
+    div.innerHTML = `<span id="prompt">${PROMPT.innerHTML}</span> ${newUserInput}`;
+
+    if (mutWriteLines.parentNode) {
+      mutWriteLines.parentNode.insertBefore(div, mutWriteLines);
+    }
+
+    if (userInput.trim().length !== 0) {
       commandHandler(userInput.toLowerCase().trim());
     }
-  
-  USERINPUT.value = resetInput;
-  userInput = resetInput;
-  scrollToBottom();
+    
+    USERINPUT.value = resetInput;
+    userInput = resetInput;
+    scrollToBottom();
+  }
 }
 
 /** Tab 键自动补全：根据已输入内容匹配命令 */
 function tabKey() {
   // Tab 补全已禁用
+}
+
+/** 处理命令队列：逐个执行多行命令 */
+function processCommandQueue() {
+  if (!isProcessingQueue || commandQueue.length === 0) {
+    isProcessingQueue = false;
+    commandQueue = [];
+    return;
+  }
+
+  // 如果前一个命令还在输出，等待
+  if (isOutputting) {
+    setTimeout(() => processCommandQueue(), 100);
+    return;
+  }
+
+  // 执行队列中的第一个命令
+  const cmd = commandQueue.shift();
+  if (cmd) {
+    commandHandler(cmd.toLowerCase().trim());
+    
+    // 继续处理队列
+    setTimeout(() => processCommandQueue(), 100);
+  } else {
+    isProcessingQueue = false;
+  }
 }
 
 /** 处理上下箭头键：在命令历史中导航 */
@@ -142,13 +199,13 @@ function commandHandler(input : string) {
         mutWriteLines = WRITELINESCOPY;
       });
     },
-    setBareMode: (b: boolean) => { bareMode = b; },
-    getBareMode: () => bareMode,
+    triggerBareMode,
     easterEggStyles,
     disableInput,
     USERINPUT,
     currentPath,
     setCurrentPath: (path: string[]) => { currentPath = path; },
+    getHistory: () => HISTORY,
   };
 
   handleCommand(input, ctx);
@@ -235,6 +292,21 @@ function disableInput() {
   }
 }
 
+/** 触发 baremode 结局：显示结局文字并禁止输入 */
+function triggerBareMode(message: string[]) {
+  clearTerminal();
+  if (USERINPUT) {
+    USERINPUT.classList.add('bareMode');
+  }
+  easterEggStyles();
+  setTimeout(() => {
+    writeLines(message);
+  }, 200);
+  setTimeout(() => {
+    disableInput();
+  }, 800);
+}
+
 /** 初始化所有事件监听器和页面加载时的横幅显示 */
 const initEventListeners = () => {
   if(HOST) {
@@ -265,13 +337,13 @@ const initEventListeners = () => {
           mutWriteLines = WRITELINESCOPY;
         });
       },
-      setBareMode: (b: boolean) => { bareMode = b; },
-      getBareMode: () => bareMode,
+      triggerBareMode,
       easterEggStyles,
       disableInput,
       USERINPUT,
       currentPath,
       setCurrentPath: (path: string[]) => { currentPath = path; },
+      getHistory: () => HISTORY,
     };
     handleCommand('banner', ctx);
     
@@ -280,11 +352,44 @@ const initEventListeners = () => {
 
   USERINPUT.addEventListener('keypress', userInputHandler);
   USERINPUT.addEventListener('keydown', userInputHandler);
-
-  // 点击任意位置时聚焦输入框
-  window.addEventListener('click', () => {
-    USERINPUT.focus();
+  
+  // 处理粘贴事件：如果粘贴的是多行文本，自动执行多行命令
+  USERINPUT.addEventListener('paste', (e: ClipboardEvent) => {
+    if (!PROMPT || !USERINPUT) return;
+    
+    const pastedText = e.clipboardData?.getData('text') || '';
+    
+    // 检测是否包含换行符
+    if (pastedText.includes('\n')) {
+      e.preventDefault();
+      // 多行文本：立即处理
+      const lines = pastedText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      
+      if (lines.length > 0) {
+        commandQueue = lines;
+        isProcessingQueue = true;
+        HISTORY.push(pastedText);
+        historyIdx = HISTORY.length;
+        
+        // 显示所有命令行
+        lines.forEach(line => {
+          const newUserInput = `<span class='output'>${line}</span>`;
+          const div = document.createElement("div");
+          div.innerHTML = `<span id="prompt">${PROMPT!.innerHTML}</span> ${newUserInput}`;
+          if (mutWriteLines && mutWriteLines.parentNode) {
+            mutWriteLines.parentNode.insertBefore(div, mutWriteLines);
+          }
+        });
+        
+        USERINPUT.value = '';
+        scrollToBottom();
+        
+        // 开始执行队列中的命令
+        processCommandQueue();
+      }
+    }
   });
+
 
   console.log("Are you witnessing?");
   console.log("visitor@Undered:$ ~ crack \\escr");
